@@ -1,0 +1,5 @@
+cenario;documento;status_inicial;acao_esperada
+aprovar;Cotacao-Ficticia-A.txt;Novo;Aprovar com comentario
+rejeitar;Cotacao-Ficticia-B.txt;Novo;Rejeitar com comentario
+sem_aprovador;Cotacao-Ficticia-C.txt;Novo;Registrar erro sem criar aprovacao
+duplicado;Cotacao-Ficticia-A.txt;Em aprovacao;Nao criar nova aprovacao

@@ -1,0 +1,13 @@
+{
+  "event_id": "evt_20261119_0001",
+  "type": "order.created",
+  "occurred_at": "2026-11-19T10:15:00-03:00",
+  "channel": "site",
+  "customer": {"name": "Loja Fictícia Aurora", "email": "compras@aurora.example"},
+  "order": {
+    "order_id": "PED-0101",
+    "supplier": "Fornecedor Horizonte Fictício",
+    "supplier_email": "contato@horizonte.example",
+    "amount": "890.00"
+  }
+}

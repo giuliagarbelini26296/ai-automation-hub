@@ -1,0 +1,181 @@
+{
+  "name": "Webhook LLM Triage (portfolio)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pedidos-triage",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "5b0c8f0e-1a6e-4b8e-9a51-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 300],
+      "webhookId": "0f5e1a3c-6d7b-4b55-8c1f-000000000001"
+    },
+    {
+      "parameters": {
+        "action": "hmac",
+        "type": "SHA256",
+        "value": "={{ JSON.stringify($json.body) }}",
+        "dataPropertyName": "signature",
+        "secret": "={{ $env.WEBHOOK_SECRET }}",
+        "encoding": "hex"
+      },
+      "id": "5b0c8f0e-1a6e-4b8e-9a51-000000000002",
+      "name": "Assinar HMAC",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [220, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.TRIAGE_API_URL }}/webhooks/pedidos",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Signature-256",
+              "value": "=sha256={{ $json.signature }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "5b0c8f0e-1a6e-4b8e-9a51-000000000003",
+      "name": "Enviar para Triage API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "c1a2b3c4-0000-4000-8000-000000000001",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 300,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5b0c8f0e-1a6e-4b8e-9a51-000000000004",
+      "name": "Aceito?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [660, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1000000-0000-4000-8000-000000000001",
+              "name": "resultado",
+              "value": "={{ $json.body.duplicate ? 'duplicado_ignorado' : 'enfileirado' }}",
+              "type": "string"
+            },
+            {
+              "id": "a1000000-0000-4000-8000-000000000002",
+              "name": "queue_id",
+              "value": "={{ $json.body.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a1000000-0000-4000-8000-000000000003",
+              "name": "status_url",
+              "value": "={{ $env.TRIAGE_API_URL }}{{ $json.body.status_url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5b0c8f0e-1a6e-4b8e-9a51-000000000005",
+      "name": "Resultado aceito",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [880, 200]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a2000000-0000-4000-8000-000000000001",
+              "name": "resultado",
+              "value": "rejeitado",
+              "type": "string"
+            },
+            {
+              "id": "a2000000-0000-4000-8000-000000000002",
+              "name": "http_status",
+              "value": "={{ $json.statusCode }}",
+              "type": "number"
+            },
+            {
+              "id": "a2000000-0000-4000-8000-000000000003",
+              "name": "erro",
+              "value": "={{ $json.body.error }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5b0c8f0e-1a6e-4b8e-9a51-000000000006",
+      "name": "Resultado rejeitado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [880, 400]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{"node": "Assinar HMAC", "type": "main", "index": 0}]]
+    },
+    "Assinar HMAC": {
+      "main": [[{"node": "Enviar para Triage API", "type": "main", "index": 0}]]
+    },
+    "Enviar para Triage API": {
+      "main": [[{"node": "Aceito?", "type": "main", "index": 0}]]
+    },
+    "Aceito?": {
+      "main": [
+        [{"node": "Resultado aceito", "type": "main", "index": 0}],
+        [{"node": "Resultado rejeitado", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {"executionOrder": "v1"},
+  "pinData": {},
+  "meta": {"templateCredsSetup": false},
+  "tags": []
+}

@@ -1,0 +1,12 @@
+services:
+  triage-api:
+    build: .
+    ports:
+      - "127.0.0.1:8102:8000"
+    env_file: .env
+    environment:
+      DB_PATH: /app/data/triage.sqlite3
+    volumes:
+      - triage-data:/app/data
+volumes:
+  triage-data:

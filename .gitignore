@@ -1,0 +1,27 @@
+# Dependências e ambientes
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Saídas de execução (bancos, logs, screenshots, traces)
+output/
+data/
+handoff/
+*.sqlite3*
+*.db
+*.log
+.robo.lock
+*.tmp
+
+# Segredos e arquivos pessoais
+.env
+.env.*
+!.env.example
+privado/
+.private/
+credenciais/
+
+.DS_Store

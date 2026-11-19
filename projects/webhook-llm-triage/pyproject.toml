@@ -1,0 +1,25 @@
+[project]
+name = "webhook-llm-triage"
+version = "0.1.0"
+description = "Webhook com HMAC, fila SQLite e triagem por LLM com saída validada (projeto de portfólio, dados fictícios)."
+requires-python = ">=3.12"
+license = "MIT"
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM"]
+ignore = ["S101", "S311"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S105", "S106", "S603"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = [
+    # Aviso de depreciação do TestClient do Starlette (sugere httpx2); não afeta o código da aplicação.
+    "ignore:Using .httpx. with .starlette.testclient. is deprecated",
+]

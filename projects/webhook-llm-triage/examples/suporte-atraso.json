@@ -1,0 +1,8 @@
+{
+  "event_id": "evt_20261119_0003",
+  "type": "support.message",
+  "occurred_at": "2026-11-19T11:02:00-03:00",
+  "channel": "email",
+  "customer": {"name": "Cliente Fictício Caio", "email": "caio@cliente.example"},
+  "message": "Meu pedido ainda não chegou e o prazo de entrega já passou. Podem verificar?"
+}

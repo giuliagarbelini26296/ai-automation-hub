@@ -1,0 +1,8 @@
+pedido;fornecedor;email;valor
+PED-0001;Fornecedor Aurora Fictício;compras@aurora.example;1250,50
+PED-0002;Fornecedor Horizonte Fictício;contato@horizonte.example;890,00
+PED-0001;Fornecedor Aurora Fictício;compras@aurora.example;1250,50
+PED-0003;Fornecedor Exemplo;email-invalido;210,00
+PED-0004;Fornecedor Exemplo;contato@exemplo.example;-10,00
+PED-0002;Fornecedor Horizonte Fictício;contato@horizonte.example;999,00
+PED-0005;Fornecedor Estação Fictício;contato@estacao.example;300,99
