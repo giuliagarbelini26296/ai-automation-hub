@@ -1,162 +1,272 @@
-# RPA intermediário — processamento de pedidos com recuperação e auditoria
+# Automação de Cadastro de Pedidos com RPA
 
-Projeto de portfólio que simula um processo operacional completo: lê um lote CSV, cria uma fila persistente, cadastra pedidos pela interface de um sistema fictício e separa exceções para revisão humana. A versão 2 inclui retomada por item, histórico de execuções e cenários de falha verificáveis.
+Projeto de estudo e portfólio que automatiza a leitura de pedidos em CSV, o preenchimento de um portal de demonstração e o registro dos resultados.
+
+O projeto contém duas implementações: uma em Python/Node.js com Playwright e outra montada no Power Automate Desktop.
+
+> Todos os fornecedores, e-mails e pedidos são fictícios. Não há integração com ERP, pagamentos ou empresas reais.
 
 ![Portal de demonstração com dados fictícios](docs/demonstracao.png)
 
-> Nota da cópia no AI Automation Hub: a pasta `docs/exemplo/` (relatórios, eventos e screenshots de execuções) não foi incluída neste repositório. Gere um relatório próprio com `npm run demo`; ele fica em `output/execucoes/<id>/relatorio.html`.
+## Objetivo
+
+Demonstrar automação de um processo operacional com:
+
+- Leitura de dados estruturados.
+- Preenchimento de formulários.
+- Validação de dados.
+- Identificação de duplicidades e conflitos.
+- Separação entre sucesso, rejeição e falha técnica.
+- Registro dos resultados para conferência.
+
+## Tecnologias
+
+| Tecnologia | Uso |
+|---|---|
+| Python | Portal local, leitura e validação dos pedidos |
+| SQLite | Persistência dos pedidos no sistema de demonstração |
+| Power Automate Desktop | Automação do navegador no Windows |
+| JavaScript | Consulta do estado do processamento no portal |
+| Node.js e Playwright | Implementação alternativa do robô |
+| CSV, TXT e HTML | Entrada de dados e relatórios |
+
+## Implementações
+
+### Power Automate Desktop
+
+Fluxo montado no Windows para:
+
+1. Abrir o portal no Microsoft Edge.
+2. Ler o arquivo CSV.
+3. Percorrer os pedidos com `For each`.
+4. Preencher fornecedor, pedido, e-mail e valor.
+5. Pressionar o botão de cadastro.
+6. Consultar o status até o término do processamento.
+7. Ler a resposta completa.
+8. Acrescentar o resultado a um relatório TXT.
+
+A consulta do status utiliza JavaScript:
+
+```javascript
+function ExecuteScript() {
+    var elemento = document.getElementById('resultado');
+    return elemento.getAttribute('data-status');
+}
+```
+
+A leitura direta foi adotada após os testes identificarem divergências na leitura do atributo pela ação nativa.
+
+O passo a passo do laboratório está em [POWER_AUTOMATE_DESKTOP.md](POWER_AUTOMATE_DESKTOP.md).
+
+### Python/Node.js com Playwright
+
+Implementação que inclui:
+
+- Fila local persistente.
+- Checkpoint e retomada por item.
+- Controle de tentativas.
+- Prevenção de duplicidades no destino.
+- Histórico de execuções.
+- Relatórios HTML e CSV.
+- Screenshots de evidência.
+- Simulações de indisponibilidade e resposta perdida.
+
+Esses recursos de fila e retomada pertencem à implementação Node.js. Não devem ser considerados implementados automaticamente no fluxo PAD.
 
 ![Relatório de processamento e exceções](docs/central-execucao.png)
 
-## Escopo intermediário
+## Estrutura principal
 
-| Recurso | Comportamento implementado |
-| --- | --- |
-| Fila persistente | Cada linha possui estado, número de tentativas e resultado |
-| Identificação do lote | Hash dos registros de entrada; alteração dos dados gera outro lote |
-| Retomada | Itens concluídos não são reenviados; pendentes e erros técnicos podem continuar |
-| Separação de exceções | Rejeição de negócio termina a linha; falha técnica admite novas tentativas |
-| Retentativa | Até três tentativas por item em cada execução, com intervalo progressivo |
-| Prevenção de duplicatas | Chave única no destino e conferência dos dados de pedido existente |
-| Auditoria | Pasta própria por execução, eventos com horário, screenshots e snapshot dos itens |
-| Revisão humana | CSV de exceções com dados de entrada e motivo da rejeição |
-| Acompanhamento | Relatório HTML por execução e histórico CSV para Excel ou Power BI |
-| Proteção de execução | Trava local impede dois robôs escrevendo na mesma pasta ao mesmo tempo |
-| Diagnóstico | Gravação opcional de trace do Playwright |
-| Testes de falha | Resposta perdida após salvar e indisponibilidade HTTP 503 simuladas |
+```text
+rpa-pedidos/
+├── dados/
+│   └── pedidos.csv
+├── docs/
+├── demo.py
+├── portal.html
+├── ler_csv.py
+├── robo.cjs
+├── fila.cjs
+├── relatorios.cjs
+├── package.json
+├── POWER_AUTOMATE_DESKTOP.md
+├── test_demo.py
+├── test-fila.cjs
+├── testar-regras.cjs
+├── testar-robo.cjs
+└── README.md
+```
 
-O nível “intermediário” descreve o escopo de estudo proposto; não é uma certificação de senioridade. O projeto não possui integração com ERP real, fila distribuída ou execução validada em produção.
+O arquivo `relatorio_pedidos.txt` é gerado pelo fluxo PAD no caminho configurado na ação de gravação.
 
-## Tecnologias e responsabilidades
+A pasta `output/` é criada pela implementação Node.js ao executar e guarda os resultados de cada execução. Ela não é versionada; os relatórios, eventos e screenshots de execuções anteriores (`docs/exemplo/`) também não foram incluídos nesta cópia do AI Automation Hub.
 
-- **Python:** leitura do CSV, validação de pedidos e servidor de demonstração.
-- **Node.js e Playwright:** preenchimento e envio pelo navegador.
-- **SQLite:** persistência do sistema fictício de destino.
-- **JSON:** fila local gravada por substituição atômica; sem múltiplos trabalhadores.
-- **HTML/CSV:** evidências para revisar resultados e analisar execuções.
+## Requisitos
 
-O robô não chama diretamente a API para cadastrar pedidos. Ele preenche campos e pressiona o botão do formulário. Não envia e-mails nem realiza pagamentos.
+### Para o fluxo PAD
 
-## Instalar e executar
+- Windows.
+- Power Automate Desktop.
+- Microsoft Edge com a extensão do Power Automate ativada.
+- Python 3.9 ou superior.
+- Fluxo configurado com os caminhos locais do projeto.
 
-Requisitos: Python 3.9+, Node.js 20+ e npm. Dentro desta pasta:
+### Para a implementação Node.js
 
-```sh
+- Python 3.9 ou superior.
+- Node.js 20 ou superior.
+- npm.
+- Navegador instalado pelo Playwright.
+
+## Executar o portal no Windows
+
+Abra o PowerShell na pasta do projeto:
+
+```powershell
+python demo.py
+```
+
+Acesse:
+
+```text
+http://127.0.0.1:8770/
+```
+
+Mantenha o PowerShell aberto durante a execução do PAD.
+
+O endereço é local: ele depende do servidor Python em execução no mesmo computador.
+
+## Configurar o CSV no PAD
+
+Na ação **Ler do arquivo CSV**, configure:
+
+| Campo | Configuração |
+|---|---|
+| Arquivo | Caminho local de `dados\pedidos.csv` |
+| Codificação | UTF-8 |
+| Separador | Ponto e vírgula (`;`) |
+| Primeira linha contém nomes das colunas | Ativado |
+| Variável de saída | `CSVTable` |
+
+Exemplo de entrada:
+
+```csv
+pedido;fornecedor;email;valor
+PED-9002;Fornecedor Aurora Fictício;compras@aurora.example;1250,50
+```
+
+Os valores devem ser informados sem separador de milhar.
+
+## Regras de negócio
+
+- Pedido no formato `PED-0001`.
+- Fornecedor e e-mail obrigatórios.
+- E-mail deve atender à validação do sistema.
+- Valor positivo, até R$ 1 milhão, com até duas casas decimais.
+- Pedido existente com os mesmos dados retorna `ja_existente`.
+- Pedido existente com dados diferentes é rejeitado.
+- Um conflito não sobrescreve o cadastro original.
+
+## Estados do processamento
+
+| Status | Significado |
+|---|---|
+| `aguardando` | Nenhum processamento iniciado |
+| `processando` | Solicitação em andamento |
+| `cadastrado` | Pedido salvo |
+| `ja_existente` | Pedido já cadastrado com os mesmos dados |
+| `rejeitado` | Dados inválidos ou conflito |
+| `erro_tecnico` | Falha técnica ou de comunicação |
+
+Rejeições de negócio são resultados esperados nos cenários de teste.
+
+## Relatório do PAD
+
+Cada pedido gera um registro semelhante a:
+
+```text
+Pedido: PED-0003
+Fornecedor: Fornecedor Exemplo
+Valor: 210,00
+Status: rejeitado
+Resposta: {
+  "erro": "E-mail inválido."
+}
+----------------------------------------
+```
+
+A gravação usa **Acrescentar conteúdo**. Portanto, novas execuções preservam os registros anteriores.
+
+O valor registrado corresponde à entrada do CSV; ele não comprova, isoladamente, o conteúdo efetivamente preenchido no navegador.
+
+## Executar a versão Node.js
+
+Dentro da pasta do projeto:
+
+```bash
 npm install
 npx playwright install chromium
 npm run demo -- --visivel
 ```
 
-Sem `--visivel`, roda em segundo plano. Para usar Chrome instalado, configure `RPA_BROWSER_CHANNEL=chrome` no seu terminal. `PYTHON` pode indicar o executável Python; por padrão usa `python` no Windows e `python3` nos outros sistemas.
+Essa versão inicia seu próprio portal e o encerra ao terminar.
 
-O robô inicia um portal local em uma porta disponível e o encerra no final. Para explorar apenas o formulário, rode `python3 demo.py` e abra `http://127.0.0.1:8770`; no Windows, use `python` quando necessário. Abrir `portal.html` como arquivo isolado não inicia o sistema e não permite cadastrar pedidos.
+### Demonstrar pausa e retomada
 
-## Demonstração de pausa e retomada
-
-Use uma pasta nova para observar todos os estados desde o início:
-
-```sh
+```bash
 npm run demo -- --saida output/estudo-retomada --limite 2
 npm run demo -- --saida output/estudo-retomada
-npm run demo -- --saida output/estudo-retomada
 ```
 
-1. A primeira execução processa duas linhas e termina como `pausada`, com cinco pendentes.
-2. A segunda preserva as duas linhas concluídas e processa apenas as cinco restantes.
-3. A terceira identifica as sete linhas concluídas e não abre navegador para reenviá-las.
+### Executar testes
 
-Com `Ctrl+C` ou SIGTERM, o robô solicita parada após a tentativa atual e preserva a fila. Se o processo for encerrado de forma abrupta, itens que ficaram `processando` voltam a `pendente` ao carregar o checkpoint. Se o sistema de destino tiver salvo antes da interrupção, sua chave única evita outro cadastro.
-
-Após encerramento forçado, uma trava `.robo.lock` pode permanecer. Confira o PID registrado e confirme que o robô não está mais ativo antes de remover **somente essa trava**. Não apague a fila ou o banco para “retomar”. O projeto não remove travas antigas automaticamente.
-
-## Demonstrar resposta perdida sem duplicação
-
-```sh
-npm run demo -- --saida output/estudo-resposta --simular-resposta-perdida --trace
-```
-
-Na primeira submissão, o servidor salva o pedido e fecha a conexão antes da resposta. O robô registra falha técnica, tenta novamente e recebe `ja_existente`. O teste automatizado confere que existe um único pedido no banco para essa entrada.
-
-O trace é salvo na pasta da execução. Abra com:
-
-```sh
-npx playwright show-trace CAMINHO_DO_TRACE_ZIP
-```
-
-## Demonstrar indisponibilidade e recuperação
-
-```sh
-npm run demo -- --saida output/estudo-falha --limite 1 --simular-indisponibilidade
-npm run demo -- --saida output/estudo-falha
-```
-
-A primeira execução recebe HTTP 503, tenta até três vezes e registra `erro_tecnico`. O comando retorna código de erro. Na segunda, o portal volta ao normal e a linha é processada novamente. A tentativa anterior continua registrada no histórico e no contador total do item.
-
-As opções de simulação afetam somente o sistema fictício iniciado pelo próprio robô.
-
-## Entrada e regras
-
-A entrada padrão é `dados/pedidos.csv`, em UTF-8, delimitada por `;`, com cabeçalho `pedido;fornecedor;email;valor`. Outra entrada pode ser definida por `--entrada CAMINHO`.
-
-Valores usam vírgula ou ponto decimal, sem separador de milhar. São convertidos a centavos no destino. Pedido tem formato `PED-0001`; fornecedor e e-mail são obrigatórios; valor deve ser positivo, até R$ 1 milhão e ter até duas casas decimais.
-
-O lote padrão tem sete linhas: três pedidos válidos inéditos, uma repetição idêntica e três rejeições (e-mail inválido, valor negativo e conflito de valor). Em base vazia, o fechamento do lote tem **3 cadastrados, 1 já existente e 3 rejeitados**.
-
-Um cadastro conflitante não sobrescreve o pedido original. Rejeições não são repetidas automaticamente. Para corrigir uma rejeição, revise a causa, altere a entrada CSV e execute: a alteração cria outro lote. Os pedidos já salvos seguem protegidos pela validação no destino.
-
-## Arquivos gerados
-
-```text
-output/
-  pedidos.sqlite3
-  .robo.lock                    # existe somente durante execução normal
-  filas/<hash-do-lote>.json     # checkpoint atualizado após cada tentativa
-  historico.csv                # uma linha por execução
-  execucoes/<id>/
-    resumo.json
-    itens.json                 # snapshot do lote ao fim desta execução
-    eventos.jsonl
-    excecoes.csv
-    relatorio.html
-    trace.zip                  # somente com --trace
-    evidencias/*.png
-```
-
-Os relatórios anteriores são preservados. O histórico é reconstruído dos resumos existentes. O banco do destino é compartilhado entre lotes da mesma pasta de saída, para que a mesma compra não seja inserida de novo em outra entrada.
-
-As contagens `cadastrados`, `ja_existentes` e `rejeitados` descrevem o estado acumulado do lote. `processados_agora` mostra quantas linhas foram tentadas nesta execução. O contador de pendentes inclui erros técnicos que ainda podem ser reprocessados. Uma repetição de lote concluído terá `processados_agora = 0`, preservando os resultados anteriores.
-
-Preserve toda a pasta de saída para manter as referências às evidências. O histórico CSV pode ser importado no Excel/Power BI; um painel Power BI não foi incluído. O relatório HTML é estático e pode ser aberto localmente.
-
-## Verificação
-
-```sh
+```bash
 npm test
 npm run test:e2e
 ```
 
-Os testes cobrem regras de validação, precisão monetária, duplicatas, conflitos, trava de execução, checkpoint corrompido, recuperação de item em processamento, escaping de relatórios e fórmulas no CSV. No navegador, cobrem pausa/retomada, histórico preservado, rejeições sem retentativa, resposta perdida após salvar, ausência de duplicata, trace e reprocessamento após indisponibilidade.
+## Validação realizada
 
-Veja [a validação local](docs/VALIDACAO.md). Os testes foram executados com Chrome no macOS. O workflow do GitHub Actions deste hub fica em `.github/workflows/ci.yml` na raiz do repositório, mas sua execução no GitHub e a instalação do Chromium no computador de quem clonar devem ser confirmadas depois de publicar.
+### Power Automate Desktop
 
-## Power Automate Desktop
+Foi demonstrada uma execução com sete linhas e registro coerente entre status e resposta, incluindo:
 
-[O laboratório PAD](POWER_AUTOMATE_DESKTOP.md) descreve a reprodução do cadastro em Windows. A fila persistente, auditoria e relatórios desta versão estão implementados em Node/Python; sua reprodução nativa no PAD está descrita como evolução pendente, sem exportação validada.
+- Pedidos já existentes.
+- Conflitos de dados.
+- E-mail inválido.
+- Valor negativo.
 
-## Próximas melhorias
+### Python/Node.js
 
-- Aprovação humana de pedidos acima de um limite antes do envio.
-- Integração com um ERP de testes com autenticação e credenciais fora do código.
-- Fila gerenciada e múltiplos trabalhadores, com controle de concorrência no destino.
-- Painel Power BI a partir do histórico real de execuções.
+Em 19/11/2026, nesta cópia do AI Automation Hub (macOS, Node 24, Python 3.12):
 
-## Autoria e referências
+- `npm test`: 4 testes Python (`Ran 4 tests` / `OK`) e 5 testes Node de regras e fila (`ℹ pass 5` / `ℹ fail 0`).
+- `npm run test:e2e`: teste de navegador aprovado — pausa/retomada, histórico preservado, rejeições sem retentativa, resposta perdida sem duplicata, trace, indisponibilidade e reprocessamento.
+- O mesmo conjunto roda no GitHub Actions do hub (`.github/workflows/ci.yml`), que passou na publicação.
 
-Implementação original preparada para o portfólio de Giulia Garbelini com apoio de IA. Estude, execute e personalize antes de apresentar em entrevistas. Empresas e dados são fictícios; nenhum código foi copiado de um projeto de terceiros.
+Detalhes em [docs/VALIDACAO.md](docs/VALIDACAO.md). Em uma verificação anterior, em outro ambiente, os testes de navegador haviam ficado bloqueados por restrições daquele ambiente.
 
-- [Playwright: biblioteca](https://playwright.dev/docs/library)
-- [Playwright: seletores por rótulo e função](https://playwright.dev/docs/locators)
-- [Playwright: diagnóstico com trace](https://playwright.dev/docs/trace-viewer)
-- [Microsoft: requisitos do PAD](https://learn.microsoft.com/en-us/power-automate/desktop-flows/requirements)
+## Pendências conhecidas
 
-Licença MIT. Não há métricas de economia de tempo ou implantação em produção comprovadas.
+- Concluir o teste de cadastro novo pelo PAD: o pedido de teste retornou “Valor inválido”, exigindo conferir o valor efetivamente enviado pelo formulário.
+- Após o cadastro novo, repetir a execução para validar a prevenção de duplicidade desse pedido.
+- Validar o cenário de tempo esgotado no PAD.
+- Disponibilizar uma exportação do fluxo PAD, se ainda não estiver incluída no repositório.
+
+O projeto permanece como laboratório de estudo, sem implantação em produção comprovada.
+
+## Aprendizados
+
+- Seletores devem identificar o campo ou elemento correto.
+- Ações de um pedido precisam permanecer dentro do mesmo `For each`.
+- Respostas assíncronas exigem espera antes da leitura.
+- Status e mensagem precisam ser conferidos em conjunto.
+- Histórico de testes deve ser separado dos resultados de uma execução de demonstração.
+
+## Autoria
+
+Projeto de portfólio de Giulia Garbelini, desenvolvido com apoio de inteligência artificial.
+
+## Licença
+
+MIT. Consulte o arquivo `LICENSE`.

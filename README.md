@@ -10,7 +10,7 @@ Operações de e-commerce e compras recebem pedidos e mensagens por vários cana
 
 | Projeto | Origem | O que demonstra | Situação |
 | --- | --- | --- | --- |
-| [rpa-pedidos](projects/rpa-pedidos/README.md) | Existente (nov/2026), preparado com apoio de IA | Node + Playwright preenchendo um portal Python/SQLite; fila JSON persistente, retomada, retries com backoff, lock, `eventos.jsonl`, screenshots, relatório HTML/CSV | Implementado; testes locais passaram (abaixo) |
+| [rpa-pedidos](projects/rpa-pedidos/README.md) | Existente (nov/2026), preparado com apoio de IA | Duas implementações sobre um portal Python/SQLite: **Power Automate Desktop** (Edge, `For each` no CSV, status lido via JavaScript, relatório TXT) e **Node + Playwright** (fila JSON persistente, retomada, retries com backoff, lock, `eventos.jsonl`, screenshots, relatório HTML/CSV) | Node: implementado, testes locais e CI passaram. PAD: execução com 7 pedidos demonstrada; cadastro novo e tempo esgotado pendentes |
 | [power-automate-aprovacoes](projects/power-automate-aprovacoes/README.md) | Existente, preparado com apoio de IA | Especificação de aprovação de documentos com SharePoint e Approvals | **Design kit — não validado** (nenhum fluxo executado em conta Microsoft) |
 | [webhook-llm-triage](projects/webhook-llm-triage/README.md) | **Extensão criada em nov/2026 com apoio de IA (Claude Code)** | FastAPI + HMAC + idempotência + fila SQLite + worker com LLM (saída validada por schema), retry/backoff/jitter, dead-letter, `/stats`, hand-off para o robô, fluxo n8n | Implementado; testes locais passaram; LLM real e n8n **não** executados |
 
@@ -124,6 +124,7 @@ Testes do webhook cobrem: assinatura válida/inválida/adulterada, erros de vali
 | Fluxo n8n (`n8n/webhook-llm-triage.json`) | Escrito como JSON; **validado só estruturalmente**, não importado nem executado no n8n |
 | Dockerfile / docker-compose do webhook | Incluídos; **não construídos** nesta validação |
 | CI no GitHub Actions | Incluído; ainda não executado no GitHub |
+| Robô no Power Automate Desktop (rpa-pedidos) | Execução com 7 pedidos demonstrada; cadastro novo, tempo esgotado e exportação do fluxo pendentes |
 | Aprovação Power Automate | Design kit, não validado |
 | Make, ERP real, fila distribuída, painel Power BI, reprocessamento de dead-letter, avaliação de qualidade de LLM | Não implementados |
 
